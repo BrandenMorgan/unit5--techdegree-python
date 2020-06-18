@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="x-ua-compatible" content="ie=edge">
+        <title>MyJournal</title>
+        <link href="https://fonts.googleapis.com/css?family=Cousine:400" rel="stylesheet" type="text/css">
+        <link href="https://fonts.googleapis.com/css?family=Work+Sans:600" rel="stylesheet" type="text/css">
+        <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+        <link rel="stylesheet" href="css/normalize.css">
+        <link rel="stylesheet" href="css/site.css">
+    </head>
+    <body>
+        <header>
+            <div class="container">
+                <div class="site-header">
+                    <a class="logo" href="index.html"><i class="material-icons">library_books</i></a>
+                    <a class="button icon-right" href="{{ url_for('new_entry') }}"><span>New Entry</span> <i class="material-icons">add</i></a>
+                </div>
+            </div>
+        </header>
+        <section>
+            <div class="container">
+                <div class="entry-list">
+                  {% for entry in entries %}
+                  <article>
+                      <h2><a href="{{ url_for('detail', id=entry.id) }}">{{ entry.title }}</a></h2>
+                      <time datetime="{{ entry.date_created.strftime('%Y-%m-%d %H:%M:%S') }}">
+                        {{ entry.date_created.strftime('%Y-%m-%d %H:%M:%S') }}</time>
+                  </article>
+                  {% endfor %}
+                    <article>
+                        <h2><a href="detail.html">The best day I’ve ever had</a></h2>
+                        <time datetime="2016-01-31">January 31, 2016</time>
+                    </article>
+                    <article>
+                        <h2><a href="detail_2.html">The absolute worst day I’ve ever had</a></h2>
+                        <time datetime="2016-01-31">January 31, 2016</time>
+                    </article>
+                    <article>
+                        <h2><a href="detail_3.html">That time at the mall</a></h2>
+                        <time datetime="2016-01-31">January 31, 2016</time>
+                    </article>
+                    <article>
+                        <h2><a href="detail_4.html">Dude, where’s my car?</a></h2>
+                        <time datetime="2016-01-31">January 31, 2016</time>
+                    </article>
+                </div>
+            </div>
+        </section>
+        <footer>
+            <div>
+                &copy; MyJournal
+            </div>
+        </footer>
+    </body>
+</html>
