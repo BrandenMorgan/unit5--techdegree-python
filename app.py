@@ -80,7 +80,8 @@ def logout():
 @app.route('/')
 @app.route('/entries')
 def index():
-    entries = models.Entry.select().limit(100)
+    """Home page to view all entries logged in or out"""
+    entries = models.Entry.select()
     return render_template('index.html', entries=entries)
 
 @app.route('/entries/new', methods=('GET', 'POST'))
@@ -91,7 +92,7 @@ def new_entry():
     if form.validate_on_submit():
         models.Entry.create(title=form.title.data.strip(),
                             content=form.content.data.strip(),
-                            resources=form.resources.data.strip(),
+                            resources=form.resources.data,
                             time_spent=form.time_spent.data,
                             user=g.user._get_current_object())
         flash("New entry posted!", "success")
@@ -110,7 +111,11 @@ def detail(id):
 @app.route('/entries/<int:id>/edit', methods=('GET', 'POST'))
 @login_required
 def edit(id):
-    """Edit an existing post"""
+    """Edit an existing entry"""
+    if current_user.is_authenticated and current_user.id == models.Entry.user_id:
+        print("success")
+    else:
+        print("Wrong")
     form = forms.EntryForm()
     if form.validate_on_submit():
         data = (models.Entry.update({models.Entry.title: form.title.data,
@@ -135,9 +140,14 @@ def edit(id):
 @login_required
 def delete(id):
     """Delete an existing entry"""
-    if current_user.is_authenticated:
-        models.Entry.delete().where(models.Entry.id == id)
+    if current_user.is_authenticated and current_user.id == models.Entry.user_id:
+        print('Deleted')
+        models.Entry.delete().where(models.Entry.id == id).execute()
         flash("Your entry has been deleted!", "success")
+        return redirect(url_for('index'))
+    elif currnet_user.is_authenticated and current_user.id != models.Entry.user_id:
+        print("deletion blocked")
+        flash("You can't delete someone elses entry.")
         return redirect(url_for('index'))
 
 
@@ -151,7 +161,7 @@ if __name__ == "__main__":
             content='This is a test entry.',
             resources='Here are some resources',
             time_spent=5,
-            user=models.User.username
+            user=1
         ),
         models.User.create_user(
             username='testuser',

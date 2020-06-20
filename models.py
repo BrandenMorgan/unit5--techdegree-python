@@ -17,6 +17,7 @@ class User(UserMixin, Model):
         database = DATABASE
         order_by = ('-joined_at',)
 
+    
     @classmethod
     def create_user(cls, username, email, password):
         try:
@@ -52,9 +53,6 @@ class Entry(Model):
                 time_spent=time_spent,
                 user=user
             )
-
-
-
 
 
 def initialize():
