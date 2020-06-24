@@ -2,7 +2,6 @@
 {% from 'macros.html' import render_field %}
 
 {% block content %}
-{% if current_user.is_authenticated and current_user.id == form.user_id %}
 <h2>Edit Entry</h2>
 <form method="POST" action="">
     {{ form.hidden_tag() }}
@@ -11,8 +10,5 @@
     {% endfor %}
     <input type="submit" value="Edit Entry" class="button">
     <a href="{{ url_for('index') }}" class="button button-secondary">Cancel</a>
-    {% else %}
-      <p>You cannot edit someone else's entry!</p>
-    {% endif %}
 </form>
 {% endblock %}

@@ -17,7 +17,7 @@ class User(UserMixin, Model):
         database = DATABASE
         order_by = ('-joined_at',)
 
-    
+
     @classmethod
     def create_user(cls, username, email, password):
         try:
@@ -46,13 +46,22 @@ class Entry(Model):
     @classmethod
     def create_entry(cls, title, content, resources, time_spent, user):
         with DATABASE.transaction():
-            cls.create(
-                title=title,
-                content=content,
-                resources=resources,
-                time_spent=time_spent,
-                user=user
-            )
+            try:
+                cls.create(
+                    title=title,
+                    content=content,
+                    resources=resources,
+                    time_spent=time_spent,
+                    user=user
+                )
+            except IntegrityError:
+                raise ValueError("Post already exists")
+                entry_record = Entry.get(title=title)
+                entry_record.content = content
+                entry_record.resources = resoureces
+                entry_record.time_spent = time_spent
+                entry_record.save()
+
 
 
 def initialize():

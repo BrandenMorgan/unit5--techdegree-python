@@ -2,13 +2,19 @@
 
 {% block content %}
 {% for entry in entries %}
-    <article>
-        <h2>
-            <a href="{{ url_for('detail', id=entry.id) }}">{{ entry.title }}</a>
-        </h2>
-        <time datetime="{{ entry.date_created.strftime('%Y-%m-%d %H:%M:%S') }}">
-            {{ entry.date_created.strftime('%Y-%m-%d %H:%M:%S') }}
-        </time>
-    </article>
+<section>
+  <div class="conatiner">
+    <div class="entry-list">
+      <article>
+          <h2>
+              <a href="{{ url_for('detail', id=entry.id) }}">{{ entry.title }}</a>
+          </h2>
+          <time datetime="{{ entry.date_created.strftime('%B %d, %Y %I:%M:%S %p') }}">
+              On: {{ entry.date_created.strftime('%B %d, %Y %I:%M:%S %p') }}
+          </time>
+      </article>
+    </div>
+  </div>
+</section>
 {% endfor %}
 {% endblock %}

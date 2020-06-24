@@ -104,6 +104,7 @@ def new_entry():
 def detail(id):
     """View an entry by id"""
     entries = models.Entry.select().where(models.Entry.id == id)
+    # users = models.User.select().where(models.Entry.user_id == models.User.id)
     if entries.count == 0:
         pass
     return render_template('detail.html', entries=entries)
@@ -111,55 +112,56 @@ def detail(id):
 @app.route('/entries/<int:id>/edit', methods=('GET', 'POST'))
 @login_required
 def edit(id):
-    """Edit an existing entry"""
-    if current_user.is_authenticated and current_user.id == models.Entry.user_id:
-        print("success")
-    else:
-        print("Wrong")
+    """Logged in user edit own existing entry"""
     form = forms.EntryForm()
+    entry_user_id = models.Entry.select().where(models.Entry.id == id)
     if form.validate_on_submit():
         data = (models.Entry.update({models.Entry.title: form.title.data,
                                     models.Entry.content: form.content.data,
                                     models.Entry.resources: form.resources.data,
                                     models.Entry.time_spent: form.time_spent.data})
                             .where(models.Entry.id == id))
-
         data.execute()
         flash("Your changes have been saved!", "success")
         return redirect(url_for('index'))
     else:
-        data = models.Entry.select().where(models.Entry.id == id).get()
-        form.title.data = data.title
-        form.content.data = data.content
-        form.resources.data = data.resources
-        form.time_spent.data = data.time_spent
+        for entry in entry_user_id:
+            if g.user.id == entry.user_id:
+                data = models.Entry.select().where(models.Entry.id == id).get()
+                form.title.data = data.title
+                form.content.data = data.content
+                form.resources.data = data.resources
+                form.time_spent.data = data.time_spent
+            else:
+                flash("You can't edit someone elses entry.")
+                return redirect(url_for('index'))
     return render_template('edit.html', form=form)
 
 
 @app.route('/entries/<int:id>/delete', methods=('GET', 'POST'))
 @login_required
 def delete(id):
-    """Delete an existing entry"""
-    if current_user.is_authenticated and current_user.id == models.Entry.user_id:
-        print('Deleted')
-        models.Entry.delete().where(models.Entry.id == id).execute()
-        flash("Your entry has been deleted!", "success")
-        return redirect(url_for('index'))
-    elif currnet_user.is_authenticated and current_user.id != models.Entry.user_id:
-        print("deletion blocked")
-        flash("You can't delete someone elses entry.")
-        return redirect(url_for('index'))
+    """Logged in user delete own existing entry"""
+    entry_user_id = models.Entry.select().where(models.Entry.id == id)
+    for entry in entry_user_id:
+        if g.user.id == entry.user_id:
+            models.Entry.delete().where(models.Entry.id == id).execute()
+            flash("Your entry has been deleted!", "success")
+            return redirect(url_for('index'))
+        else:
+            flash("You can't delete someone elses entry.")
+            return redirect(url_for('index'))
 
 
 
 
 if __name__ == "__main__":
     models.initialize()
-    try:
+    try: # Makes new entry every time the program runs.
         models.Entry.create_entry(
-            title='test title',
-            content='This is a test entry.',
-            resources='Here are some resources',
+            title='Third',
+            content='This is the third entry with no duplicates.',
+            resources='resources',
             time_spent=5,
             user=1
         ),
