@@ -15,7 +15,6 @@ class User(UserMixin, Model):
 
     class Meta:
         database = DATABASE
-        order_by = ('-joined_at',)
 
 
     @classmethod
@@ -37,30 +36,30 @@ class Entry(Model):
     content = TextField()
     resources = TextField()
     time_spent = IntegerField()
-    user = ForeignKeyField(model=User, backref='entries')
+    user = ForeignKeyField(User, backref='entries')
 
     class Meta:
         database = DATABASE
-        order_by = ('-date_created',)
+        # order_by = ('date_created',)
 
-    @classmethod
-    def create_entry(cls, title, content, resources, time_spent, user):
-        with DATABASE.transaction():
-            try:
-                cls.create(
-                    title=title,
-                    content=content,
-                    resources=resources,
-                    time_spent=time_spent,
-                    user=user
-                )
-            except IntegrityError:
-                raise ValueError("Post already exists")
-                entry_record = Entry.get(title=title)
-                entry_record.content = content
-                entry_record.resources = resoureces
-                entry_record.time_spent = time_spent
-                entry_record.save()
+    # @classmethod
+    # def create_entry(cls, title, content, resources, time_spent, user):
+    #     with DATABASE.transaction():
+    #         try:
+    #             cls.create(
+    #                 title=title,
+    #                 content=content,
+    #                 resources=resources,
+    #                 time_spent=time_spent,
+    #                 user=user
+    #             )
+    #         except IntegrityError:
+    #             raise ValueError("Entry already exists")
+    #             entry_record = Entry.get(title=title)
+    #             entry_record.content = content
+    #             entry_record.resources = resoureces
+    #             entry_record.time_spent = time_spent
+    #             entry_record.save()
 
 
 

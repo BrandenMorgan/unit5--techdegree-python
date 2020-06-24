@@ -1,4 +1,4 @@
-from flask import Flask, render_template, g, flash, redirect, url_for
+from flask import Flask, render_template, g, flash, redirect, url_for, abort
 from flask_bcrypt import check_password_hash
 from flask_login import (LoginManager, login_user, logout_user,
                         login_required, current_user)
@@ -81,7 +81,8 @@ def logout():
 @app.route('/entries')
 def index():
     """Home page to view all entries logged in or out"""
-    entries = models.Entry.select()
+    # add functionality to go to next page if there are more than x entries
+    entries = models.Entry.select().order_by(models.Entry.date_created.desc())
     return render_template('index.html', entries=entries)
 
 @app.route('/entries/new', methods=('GET', 'POST'))
@@ -106,7 +107,7 @@ def detail(id):
     entries = models.Entry.select().where(models.Entry.id == id)
     # users = models.User.select().where(models.Entry.user_id == models.User.id)
     if entries.count == 0:
-        pass
+        abort(404)
     return render_template('detail.html', entries=entries)
 
 @app.route('/entries/<int:id>/edit', methods=('GET', 'POST'))
@@ -142,6 +143,7 @@ def edit(id):
 @login_required
 def delete(id):
     """Logged in user delete own existing entry"""
+    # if delete set cookie?
     entry_user_id = models.Entry.select().where(models.Entry.id == id)
     for entry in entry_user_id:
         if g.user.id == entry.user_id:
@@ -153,23 +155,29 @@ def delete(id):
             return redirect(url_for('index'))
 
 
+@app.errorhandler(404)
+def not_found(error):
+    return render_template('404.html'), 404
 
 
 if __name__ == "__main__":
     models.initialize()
-    try: # Makes new entry every time the program runs.
-        models.Entry.create_entry(
-            title='Third',
-            content='This is the third entry with no duplicates.',
+    try:# if delete() set cookie so the server knows to delete it.
+
+        models.Entry.get_or_create(
+            title='Todays first entry',
+            content='This is todays first entry and there will be no duplicates.',
             resources='resources',
             time_spent=5,
             user=1
-        ),
-        models.User.create_user(
-            username='testuser',
-            email='test@example.com',
-            password='password'
         )
+        if models.Entry.delete().where(models.Entry.title == 'Todays first entry'):
+            models.Entry.delete().where(models.Entry.title == 'Todays first entry').execute()
+        # models.User.create_user(
+        #     username='testuser',
+        #     email='test@example.com',
+        #     password='password'
+        # )
     except ValueError:
         pass
     app.run(debug=DEBUG, host=HOST, port=PORT)
