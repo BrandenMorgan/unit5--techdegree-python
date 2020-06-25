@@ -2,7 +2,7 @@ from flask import Flask, render_template, g, flash, redirect, url_for, abort
 from flask_bcrypt import check_password_hash
 from flask_login import (LoginManager, login_user, logout_user,
                         login_required, current_user)
-
+import datetime
 import forms
 import models
 
@@ -92,6 +92,7 @@ def new_entry():
     form = forms.EntryForm()
     if form.validate_on_submit():
         models.Entry.create(title=form.title.data.strip(),
+                            date_created=form.date_created.data,
                             content=form.content.data.strip(),
                             resources=form.resources.data,
                             time_spent=form.time_spent.data,
@@ -118,6 +119,7 @@ def edit(id):
     entry_user_id = models.Entry.select().where(models.Entry.id == id)
     if form.validate_on_submit():
         data = (models.Entry.update({models.Entry.title: form.title.data,
+                                    models.Entry.date_created: form.date_created.data,
                                     models.Entry.content: form.content.data,
                                     models.Entry.resources: form.resources.data,
                                     models.Entry.time_spent: form.time_spent.data})
@@ -130,6 +132,7 @@ def edit(id):
             if g.user.id == entry.user_id:
                 data = models.Entry.select().where(models.Entry.id == id).get()
                 form.title.data = data.title
+                form.date_created.data = data.date_created
                 form.content.data = data.content
                 form.resources.data = data.resources
                 form.time_spent.data = data.time_spent
@@ -143,7 +146,6 @@ def edit(id):
 @login_required
 def delete(id):
     """Logged in user delete own existing entry"""
-    # if delete set cookie?
     entry_user_id = models.Entry.select().where(models.Entry.id == id)
     for entry in entry_user_id:
         if g.user.id == entry.user_id:
@@ -167,6 +169,7 @@ if __name__ == "__main__":
         try:
             models.Entry.get_or_create(
                 title='Todays first entry',
+                date_created=datetime.datetime.now(),
                 content='This is todays first entry and there will be no duplicates.',
                 resources='resources',
                 time_spent=5,

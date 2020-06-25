@@ -2,12 +2,23 @@
 {% from 'macros.html' import render_field %}
 
 {% block content %}
-<form method="POST" action="">
-    {{ form.hidden_tag() }}
-    {% for field in form %}
-        {{ render_field(field) }}
-    {% endfor %}
-    <input type="submit" value="Publish Entry" class="button">
-    <a href="{{ url_for('index') }}" class="button button-secondary">Cancel</a>
-</form>
+<section>
+    <div class="conatiner">
+          <div class="new-entry">
+            <h2>New Entry</h2>
+            <form method="POST" action="">
+                {{ form.hidden_tag() }}
+                {% for field in form %}
+                    {% if field.type == 'DateField' %}
+                        <input id="date" type="date" name="date"><br>
+                    {% else %}
+                        {{ render_field(field) }}
+                    {% endif %}
+                {% endfor %}
+                <input type="submit" value="Publish Entry" class="button">
+                <a href="{{ url_for('index') }}" class="button button-secondary">Cancel</a>
+            </form>
+        </div>
+    </div>
+</section>
 {% endblock %}

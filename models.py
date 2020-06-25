@@ -31,8 +31,8 @@ class User(UserMixin, Model):
 
 
 class Entry(Model):
-    date_created = DateTimeField(default=datetime.datetime.now)
     title = CharField(max_length=100)
+    date_created = DateField(formats=['%m/%d/%Y'])
     content = TextField()
     resources = TextField()
     time_spent = IntegerField()

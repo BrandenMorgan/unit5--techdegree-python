@@ -1,7 +1,6 @@
 {% extends "layout.html" %}
 
 {% block content %}
-{% if entries.count() %}
 {% for entry in entries %}
 <section>
   <div class="conatiner">
@@ -10,15 +9,12 @@
           <h2>
               <a href="{{ url_for('detail', id=entry.id) }}">{{ entry.title }}</a>
           </h2>
-          <time datetime="{{ entry.date_created.strftime('%B %d, %Y %I:%M:%S %p') }}">
-              On: {{ entry.date_created.strftime('%B %d, %Y %I:%M:%S %p') }}
+          <time datetime="{{ entry.date_created }}">
+              {{ entry.date_created }}
           </time>
       </article>
     </div>
   </div>
 </section>
 {% endfor %}
-{% else %}
-    <h5>No entries yet</h5>
-{% endif %}
 {% endblock %}
