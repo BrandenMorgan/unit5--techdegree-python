@@ -162,22 +162,23 @@ def not_found(error):
 
 if __name__ == "__main__":
     models.initialize()
-    try:# if delete() set cookie so the server knows to delete it.
-
-        models.Entry.get_or_create(
-            title='Todays first entry',
-            content='This is todays first entry and there will be no duplicates.',
-            resources='resources',
-            time_spent=5,
-            user=1
-        )
-        if models.Entry.delete().where(models.Entry.title == 'Todays first entry'):
-            models.Entry.delete().where(models.Entry.title == 'Todays first entry').execute()
-        # models.User.create_user(
-        #     username='testuser',
-        #     email='test@example.com',
-        #     password='password'
-        # )
-    except ValueError:
+    entries = models.Entry.select()
+    if len(entries) <= 0:
+        try:
+            models.Entry.get_or_create(
+                title='Todays first entry',
+                content='This is todays first entry and there will be no duplicates.',
+                resources='resources',
+                time_spent=5,
+                user=1
+            )
+            # models.User.create_user(
+            #     username='testuser',
+            #     email='test@example.com',
+            #     password='password'
+            # )
+        except ValueError:
+            pass
+    else:
         pass
     app.run(debug=DEBUG, host=HOST, port=PORT)
