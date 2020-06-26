@@ -1,31 +1,33 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, TextAreaField, IntegerField, DateField
+from wtforms import StringField, PasswordField, TextAreaField, IntegerField
 from wtforms.validators import (DataRequired, Regexp, ValidationError, Email,
                                 email_validator, Length, EqualTo)
 
-
 from models import User
+
 
 def name_exists(form, field):
     if User.select().where(User.username == field.data).exists():
         raise ValidationError('User with that name already exists.')
 
+
 def email_exists(form, field):
     if User.select().where(User.email == field.data).exists():
         raise ValidationError('User with that email already exists.')
+
 
 class RegisterForm(FlaskForm):
     username = StringField(
         'Username',
         validators=[
-        DataRequired(),
-        Regexp(
-            r'^[a-zA-Z0-9_]+$',
+            DataRequired(),
+            Regexp(
+                r'^[a-zA-Z0-9_]+$',
                 message=("Username should be one word, letters, "
-                         "numbers, and underscores only.")
-        ),
-        name_exists
-    ])
+                        "numbers, and underscores only.")
+            ),
+            name_exists
+        ])
     email = StringField(
         'Email',
         validators=[
@@ -45,13 +47,15 @@ class RegisterForm(FlaskForm):
         validators=[DataRequired()]
     )
 
+
 class LoginForm(FlaskForm):
     email = StringField('Email', validators=[DataRequired(), Email()])
     password = PasswordField('Password', validators=[DataRequired()])
 
+
 class EntryForm(FlaskForm):
     title = StringField('Title', validators=[DataRequired()])
-    date_created = DateField('Date', validators=[DataRequired()])
-    content = TextAreaField(validators=[DataRequired()])
+    content = TextAreaField("What's on your mind?", validators=[DataRequired()])
     resources = TextAreaField()
     time_spent = IntegerField()
+    tags = TextAreaField()

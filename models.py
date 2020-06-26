@@ -16,7 +16,6 @@ class User(UserMixin, Model):
     class Meta:
         database = DATABASE
 
-
     @classmethod
     def create_user(cls, username, email, password):
         try:
@@ -32,35 +31,25 @@ class User(UserMixin, Model):
 
 class Entry(Model):
     title = CharField(max_length=100)
-    date_created = DateField(formats=['%m/%d/%Y'])
+    date_created = DateField(default=datetime.datetime.now)
     content = TextField()
     resources = TextField()
     time_spent = IntegerField()
+    tags = TextField()
     user = ForeignKeyField(User, backref='entries')
 
     class Meta:
         database = DATABASE
-        # order_by = ('date_created',)
 
-    # @classmethod
-    # def create_entry(cls, title, content, resources, time_spent, user):
-    #     with DATABASE.transaction():
-    #         try:
-    #             cls.create(
-    #                 title=title,
-    #                 content=content,
-    #                 resources=resources,
-    #                 time_spent=time_spent,
-    #                 user=user
-    #             )
-    #         except IntegrityError:
-    #             raise ValueError("Entry already exists")
-    #             entry_record = Entry.get(title=title)
-    #             entry_record.content = content
-    #             entry_record.resources = resoureces
-    #             entry_record.time_spent = time_spent
-    #             entry_record.save()
 
+class Tag(Model):
+    to_entry = ForeignKeyField(Entry, backref='related_to')
+
+    class Meta:
+        database = DATABASE
+        index = (
+            (('to_entry'), True),
+        )
 
 
 def initialize():

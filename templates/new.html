@@ -9,11 +9,7 @@
             <form method="POST" action="">
                 {{ form.hidden_tag() }}
                 {% for field in form %}
-                    {% if field.type == 'DateField' %}
-                        <input id="date" type="date" name="date"><br>
-                    {% else %}
-                        {{ render_field(field) }}
-                    {% endif %}
+                    {{ render_field(field) }}
                 {% endfor %}
                 <input type="submit" value="Publish Entry" class="button">
                 <a href="{{ url_for('index') }}" class="button button-secondary">Cancel</a>

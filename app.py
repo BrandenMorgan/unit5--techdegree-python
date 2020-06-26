@@ -1,8 +1,11 @@
-from flask import Flask, render_template, g, flash, redirect, url_for, abort
+import datetime
+
+from flask import (Flask, render_template, g, flash, redirect,
+                    url_for, abort)
 from flask_bcrypt import check_password_hash
 from flask_login import (LoginManager, login_user, logout_user,
                         login_required, current_user)
-import datetime
+
 import forms
 import models
 
@@ -25,6 +28,7 @@ def load_user(userid):
     except models.DoesNotExist:
         return None
 
+
 @app.before_request
 def before_request():
     """Connect to the database befire each request."""
@@ -32,11 +36,13 @@ def before_request():
     g.db.connect()
     g.user = current_user
 
+
 @app.after_request
 def after_request(response):
     """Close the database connection after each request"""
     g.db.close()
     return response
+
 
 @app.route('/register', methods=('GET', 'POST'))
 def register():
@@ -50,6 +56,7 @@ def register():
         )
         return redirect(url_for('index'))
     return render_template('register.html', form=form)
+
 
 @app.route('/login', methods=('GET', 'POST'))
 def login():
@@ -81,9 +88,11 @@ def logout():
 @app.route('/entries')
 def index():
     """Home page to view all entries logged in or out"""
-    # add functionality to go to next page if there are more than x entries
+    # Display the author of each entry.
+    # Add functionality to go to next page if there are more than x entries?
     entries = models.Entry.select().order_by(models.Entry.date_created.desc())
     return render_template('index.html', entries=entries)
+
 
 @app.route('/entries/new', methods=('GET', 'POST'))
 @login_required
@@ -92,24 +101,46 @@ def new_entry():
     form = forms.EntryForm()
     if form.validate_on_submit():
         models.Entry.create(title=form.title.data.strip(),
-                            date_created=form.date_created.data,
                             content=form.content.data.strip(),
                             resources=form.resources.data,
                             time_spent=form.time_spent.data,
-                            user=g.user._get_current_object())
+                            tags=form.tags.data,
+                            user=g.user._get_current_object()
+                            )
         flash("New entry posted!", "success")
         return redirect(url_for('index'))
     return render_template('new.html', form=form)
+
 
 @app.route('/entries/<int:id>')
 @login_required
 def detail(id):
     """View an entry by id"""
     entries = models.Entry.select().where(models.Entry.id == id)
+    # Display the aithor.
     # users = models.User.select().where(models.Entry.user_id == models.User.id)
     if entries.count == 0:
         abort(404)
     return render_template('detail.html', entries=entries)
+
+
+@app.route('/entries/<tag>')
+@login_required
+def tags(tags):
+    """View list of entries with the same tag"""
+    try:
+        to_entry = models.Entry.get(models.Entry.tags**tags)
+    except models.DoesNotExist:
+        abort(404)
+    else:
+        try:
+            models.Tag.create(
+                to_entry=to_entry
+            )
+        except models.IntegrityError:
+            pass
+    return render_template('tags.html', tags=to_entry.tags)
+
 
 @app.route('/entries/<int:id>/edit', methods=('GET', 'POST'))
 @login_required
@@ -118,21 +149,24 @@ def edit(id):
     form = forms.EntryForm()
     entry_user_id = models.Entry.select().where(models.Entry.id == id)
     if form.validate_on_submit():
-        data = (models.Entry.update({models.Entry.title: form.title.data,
-                                    models.Entry.date_created: form.date_created.data,
-                                    models.Entry.content: form.content.data,
-                                    models.Entry.resources: form.resources.data,
-                                    models.Entry.time_spent: form.time_spent.data})
-                            .where(models.Entry.id == id))
+        data = (models.Entry
+                .update({models.Entry.title: form.title.data,
+                        models.Entry.date_created: datetime.datetime.now(),
+                        models.Entry.content: form.content.data,
+                        models.Entry.resources: form.resources.data,
+                        models.Entry.time_spent: form.time_spent.data})
+                .where(models.Entry.id == id))
         data.execute()
         flash("Your changes have been saved!", "success")
         return redirect(url_for('index'))
     else:
         for entry in entry_user_id:
             if g.user.id == entry.user_id:
-                data = models.Entry.select().where(models.Entry.id == id).get()
+                data = (models.Entry
+                        .select()
+                        .where(models.Entry.id == id)
+                        .get())
                 form.title.data = data.title
-                form.date_created.data = data.date_created
                 form.content.data = data.content
                 form.resources.data = data.resources
                 form.time_spent.data = data.time_spent
@@ -167,19 +201,16 @@ if __name__ == "__main__":
     entries = models.Entry.select()
     if len(entries) <= 0:
         try:
-            models.Entry.get_or_create(
-                title='Todays first entry',
-                date_created=datetime.datetime.now(),
-                content='This is todays first entry and there will be no duplicates.',
-                resources='resources',
-                time_spent=5,
-                user=1
-            )
-            # models.User.create_user(
-            #     username='testuser',
-            #     email='test@example.com',
-            #     password='password'
-            # )
+            with DATABASE.transaction():
+                models.Entry.get_or_create(
+                    title='Todays first entry',
+                    content=('This is todays first entry and there will be '
+                            'no duplicates.'),
+                    resources='resources',
+                    time_spent=5,
+                    tags='tag',
+                    user=1
+                )
         except ValueError:
             pass
     else:

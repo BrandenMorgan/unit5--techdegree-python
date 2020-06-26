@@ -8,22 +8,32 @@
     <div class="entry-list single">
         <article>
             <h1>{{ entry.title }}</h1>
-            <time datetime="{{ entry.date_created.strftime('%m/%d/%Y') }}">
-                {{ entry.date_created.strftime('%m/%d/%Y') }}
+            <time datetime="{{ entry.date_created.strftime('%B %d, %Y') }}">
+              Created: {{ entry.date_created.strftime('%B %d, %Y') }}
             </time>
             <div class="entry">
                 <h3>Time Spent: </h3>
+                <!-- denomination of time? -->
                 <p>{{ entry.time_spent }}</p>
             </div>
             <div class="entry">
                 <h3>What I Learned:</h3>
                 <p>{{ entry.content }}</p>
+            </div>
             <div class="entry">
                 <h3>Resources to Remember:</h3>
                 <ul>
                   {% for item in entry.resources.split() %}
                     <li><a href="http://{{ item }}" target="_blank">{{ item }}</a></li>
-                    {% endfor %}
+                  {% endfor %}
+                </ul>
+            </div>
+            <div class="entry">
+                <h3>View posts by tag:</h3>
+                <ul>
+                  {% for item in entry.tags.split() %}
+                    <li><a href="http://{{ item }}">{{ item }}</a></li>
+                  {% endfor %}
                 </ul>
             </div>
           </article>
@@ -35,6 +45,6 @@
         <p><a href="{{ url_for('delete', id=entry.id) }}">Delete Entry</a></p>
     </div>
 </section>
-{% endif %}
+    {% endif %}
 {% endfor %}
 {% endblock %}
