@@ -35,7 +35,6 @@ class Entry(Model):
     content = TextField()
     resources = TextField()
     time_spent = IntegerField()
-    tags = TextField()
     user = ForeignKeyField(User, backref='entries')
 
     class Meta:
@@ -43,7 +42,8 @@ class Entry(Model):
 
 
 class Tag(Model):
-    to_entry = ForeignKeyField(Entry, backref='related_to')
+    tags = TextField()
+    to_entry = ForeignKeyField(Entry)
 
     class Meta:
         database = DATABASE
@@ -54,5 +54,5 @@ class Tag(Model):
 
 def initialize():
     DATABASE.connect()
-    DATABASE.create_tables([Entry, User], safe=True)
+    DATABASE.create_tables([Entry, User, Tag], safe=True)
     DATABASE.close()

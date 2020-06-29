@@ -90,23 +90,35 @@ def index():
     """Home page to view all entries logged in or out"""
     # Display the author of each entry.
     # Add functionality to go to next page if there are more than x entries?
+    # entries = (models.Entry
+    #        .select()
+    #        .join(models.Tag)
+    #        )
+    # for entry in entry_user_id:
+    #     if g.user.id == entry.user_id:
     entries = models.Entry.select().order_by(models.Entry.date_created.desc())
-    return render_template('index.html', entries=entries)
+    tags = (models.Tag
+            .select()
+            .where(models.Entry.id == models.Tag.to_entry_id)
+            )
+    return render_template('index.html', entries=entries, tags=tags)
 
 
 @app.route('/entries/new', methods=('GET', 'POST'))
 @login_required
 def new_entry():
     """Make a new entry"""
+    to_entry = models.Entry.get(models.Entry.id)
     form = forms.EntryForm()
     if form.validate_on_submit():
         models.Entry.create(title=form.title.data.strip(),
                             content=form.content.data.strip(),
                             resources=form.resources.data,
                             time_spent=form.time_spent.data,
-                            tags=form.tags.data,
                             user=g.user._get_current_object()
-                            )
+                            ),
+        models.Tag.create(tags=form.tags.data,
+                          to_entry=to_entry)
         flash("New entry posted!", "success")
         return redirect(url_for('index'))
     return render_template('new.html', form=form)
@@ -117,29 +129,50 @@ def new_entry():
 def detail(id):
     """View an entry by id"""
     entries = models.Entry.select().where(models.Entry.id == id)
-    # Display the aithor.
+    entries = (models.Entry
+           .select()
+           .join(models.Tag)
+           .where(models.Entry.id == id)
+           )
+    tags = (models.Tag
+           .select()
+           )
+    for tag in tags:
+        for entry in entries:
+            print("tag.id = ", tag.id)
+            print("entry.id = ", entry.id)
+            print(tag.id == entry.id)
+            if tag.id == entry.id:
+                print("entries = ", entry.title)
+
+    # Display the author.
     # users = models.User.select().where(models.Entry.user_id == models.User.id)
     if entries.count == 0:
         abort(404)
-    return render_template('detail.html', entries=entries)
+    return render_template('detail.html', entries=entries, tags=tags)
 
 
 @app.route('/entries/<tag>')
 @login_required
 def tags(tags):
     """View list of entries with the same tag"""
-    try:
-        to_entry = models.Entry.get(models.Entry.tags**tags)
-    except models.DoesNotExist:
-        abort(404)
-    else:
-        try:
-            models.Tag.create(
-                to_entry=to_entry
-            )
-        except models.IntegrityError:
-            pass
-    return render_template('tags.html', tags=to_entry.tags)
+    query = (models.Entry
+           .select()
+           .join(models.Tag)
+           .where(models.Tags.tags == tags))
+
+    # try:
+    #     to_entry = models.Tag.get(models.Tag.tags**tags)
+    # except models.DoesNotExist:
+    #     abort(404)
+    # else:
+    #     try:
+    #         models.Tag.create(
+    #             to_entry=to_entry
+    #         )
+    #     except models.IntegrityError:
+    #         pass
+    return render_template('tags.html', tags=query)
 
 
 @app.route('/entries/<int:id>/edit', methods=('GET', 'POST'))
@@ -154,7 +187,8 @@ def edit(id):
                         models.Entry.date_created: datetime.datetime.now(),
                         models.Entry.content: form.content.data,
                         models.Entry.resources: form.resources.data,
-                        models.Entry.time_spent: form.time_spent.data})
+                        models.Entry.time_spent: form.time_spent.data,
+                        models.Entry.time_spent: form.tags.data})
                 .where(models.Entry.id == id))
         data.execute()
         flash("Your changes have been saved!", "success")
@@ -166,10 +200,7 @@ def edit(id):
                         .select()
                         .where(models.Entry.id == id)
                         .get())
-                form.title.data = data.title
-                form.content.data = data.content
-                form.resources.data = data.resources
-                form.time_spent.data = data.time_spent
+                form = forms.EntryForm(obj=data)
             else:
                 flash("You can't edit someone elses entry.")
                 return redirect(url_for('index'))
@@ -199,18 +230,23 @@ def not_found(error):
 if __name__ == "__main__":
     models.initialize()
     entries = models.Entry.select()
-    if len(entries) <= 0:
+    tags = models.Tag.select()
+    if len(entries) <= 0 and len(tags) <= 0:
         try:
-            with DATABASE.transaction():
+            with models.DATABASE.transaction():
                 models.Entry.get_or_create(
                     title='Todays first entry',
                     content=('This is todays first entry and there will be '
                             'no duplicates.'),
                     resources='resources',
                     time_spent=5,
-                    tags='tag',
                     user=1
+                ),
+                models.Tag.get_or_create(
+                    tags='Technology',
+                    to_entry=1
                 )
+
         except ValueError:
             pass
     else:

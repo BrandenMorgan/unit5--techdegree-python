@@ -23,18 +23,18 @@
             <div class="entry">
                 <h3>Resources to Remember:</h3>
                 <ul>
-                  {% for item in entry.resources.split() %}
-                    <li><a href="http://{{ item }}" target="_blank">{{ item }}</a></li>
-                  {% endfor %}
+                    <li><p>{{ entry.resources }}</p></li>
                 </ul>
             </div>
             <div class="entry">
                 <h3>View posts by tag:</h3>
-                <ul>
-                  {% for item in entry.tags.split() %}
-                    <li><a href="http://{{ item }}">{{ item }}</a></li>
-                  {% endfor %}
-                </ul>
+                {% for tag in tags %}
+                  {% if tag.id == entry.id %}
+                    <ul>
+                        <li><a href="">{{ tag.tags }}</a></li>
+                    </ul>
+                  {% endif %}
+                {% endfor %}
             </div>
           </article>
         </div>

@@ -12,9 +12,9 @@
           <time datetime="{{ entry.date_created.strftime('%B %d, %Y') }}">
             On: {{ entry.date_created.strftime('%B %d, %Y') }}
           </time>
-          {% for tag in entry.tags.split() %}
-            <li><a href="{{ url_for('tags') }}">{{ tag }}</a></li>
-          {% endfor %}
+
+            <li><a href="{{ url_for('tags', tags=entry.tags) }}">{{ entry.tags }}</a></li>
+
       </article>
     </div>
   </div>
