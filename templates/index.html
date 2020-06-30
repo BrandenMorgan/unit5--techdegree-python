@@ -13,7 +13,11 @@
             On: {{ entry.date_created.strftime('%B %d, %Y') }}
           </time>
           {% for tag in tags %}
-              <li><a href="">{{ tag.tags }}</a></li>
+            {% if tag.id == entry.id %}
+              {% for item in tag.tags.split() %}
+                  <li><a href="{{ url_for('tags', tag=item) }}">{{ item }}</a></li>
+              {% endfor %}
+            {% endif %}
           {% endfor %}
       </article>
     </div>

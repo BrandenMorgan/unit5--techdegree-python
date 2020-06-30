@@ -97,10 +97,8 @@ def index():
     # for entry in entry_user_id:
     #     if g.user.id == entry.user_id:
     entries = models.Entry.select().order_by(models.Entry.date_created.desc())
-    tags = (models.Tag
-            .select()
-            .where(models.Entry.id == models.Tag.to_entry_id)
-            )
+    tags = models.Tag.select()
+
     return render_template('index.html', entries=entries, tags=tags)
 
 
@@ -117,7 +115,7 @@ def new_entry():
                             time_spent=form.time_spent.data,
                             user=g.user._get_current_object()
                             ),
-        models.Tag.create(tags=form.tags.data,
+        models.Tag.create(tags=form.tags.data.strip(),
                           to_entry=to_entry)
         flash("New entry posted!", "success")
         return redirect(url_for('index'))
@@ -129,22 +127,7 @@ def new_entry():
 def detail(id):
     """View an entry by id"""
     entries = models.Entry.select().where(models.Entry.id == id)
-    entries = (models.Entry
-           .select()
-           .join(models.Tag)
-           .where(models.Entry.id == id)
-           )
-    tags = (models.Tag
-           .select()
-           )
-    for tag in tags:
-        for entry in entries:
-            print("tag.id = ", tag.id)
-            print("entry.id = ", entry.id)
-            print(tag.id == entry.id)
-            if tag.id == entry.id:
-                print("entries = ", entry.title)
-
+    tags = models.Tag.select()
     # Display the author.
     # users = models.User.select().where(models.Entry.user_id == models.User.id)
     if entries.count == 0:
@@ -154,25 +137,14 @@ def detail(id):
 
 @app.route('/entries/<tag>')
 @login_required
-def tags(tags):
+def tags(tag):
     """View list of entries with the same tag"""
-    query = (models.Entry
-           .select()
-           .join(models.Tag)
-           .where(models.Tags.tags == tags))
-
-    # try:
-    #     to_entry = models.Tag.get(models.Tag.tags**tags)
-    # except models.DoesNotExist:
-    #     abort(404)
-    # else:
-    #     try:
-    #         models.Tag.create(
-    #             to_entry=to_entry
-    #         )
-    #     except models.IntegrityError:
-    #         pass
-    return render_template('tags.html', tags=query)
+    tags = models.Tag.select()
+    entries = (models.Entry
+              .select()
+              .join(models.Tag, on=(models.Entry.id == models.Tag.id))
+              .where(models.Tag.tags.contains(tag)))
+    return render_template('tags.html', entries=entries, tags=tags)
 
 
 @app.route('/entries/<int:id>/edit', methods=('GET', 'POST'))
@@ -187,10 +159,13 @@ def edit(id):
                         models.Entry.date_created: datetime.datetime.now(),
                         models.Entry.content: form.content.data,
                         models.Entry.resources: form.resources.data,
-                        models.Entry.time_spent: form.time_spent.data,
-                        models.Entry.time_spent: form.tags.data})
+                        models.Entry.time_spent: form.time_spent.data})
                 .where(models.Entry.id == id))
         data.execute()
+        tag_data = (models.Tag
+                    .update({models.Tag.tags: form.tags.data})
+                    .where(models.Tag.id == id))
+        tag_data.execute()
         flash("Your changes have been saved!", "success")
         return redirect(url_for('index'))
     else:
@@ -198,9 +173,14 @@ def edit(id):
             if g.user.id == entry.user_id:
                 data = (models.Entry
                         .select()
+                        .join(models.Tag, on=(models.Entry.id == models.Tag.id))
                         .where(models.Entry.id == id)
                         .get())
+                tag = (models.Tag
+                       .select()
+                       .where(models.Tag.id == id).get())
                 form = forms.EntryForm(obj=data)
+                form.tags.data = tag.tags
             else:
                 flash("You can't edit someone elses entry.")
                 return redirect(url_for('index'))
@@ -215,6 +195,7 @@ def delete(id):
     for entry in entry_user_id:
         if g.user.id == entry.user_id:
             models.Entry.delete().where(models.Entry.id == id).execute()
+            models.Tag.delete().where(models.Tag.id == id).execute()
             flash("Your entry has been deleted!", "success")
             return redirect(url_for('index'))
         else:

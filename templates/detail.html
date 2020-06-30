@@ -30,9 +30,11 @@
                 <h3>View posts by tag:</h3>
                 {% for tag in tags %}
                   {% if tag.id == entry.id %}
-                    <ul>
-                        <li><a href="">{{ tag.tags }}</a></li>
-                    </ul>
+                    {% for item in tag.tags.split() %}
+                      <ul>
+                          <li><a href="{{ url_for('tags', tag=tag.tags) }}">{{ item }}</a></li>
+                      </ul>
+                    {% endfor %}
                   {% endif %}
                 {% endfor %}
             </div>

@@ -1,7 +1,7 @@
 {% extends "layout.html" %}
 
 {% block content %}
-{% for entry in tags %}
+{% for entry in entries %}
 <section>
   <div class="conatiner">
     <div class="entry-list">
@@ -12,9 +12,13 @@
           <time datetime="{{ entry.date_created.strftime('%B %d, %Y') }}">
             On: {{ entry.date_created.strftime('%B %d, %Y') }}
           </time>
-
-            <li><a href="{{ url_for('tags', tags=entry.tags) }}">{{ entry.tags }}</a></li>
-
+          {% for tag in tags %}
+            {% if tag.id == entry.id %}
+              {% for item in tag.tags.split() %}
+                <li><a href="{{ url_for('tags', tag=item) }}">{{ item }}</a></li>
+              {% endfor %}
+            {% endif %}
+          {% endfor %}
       </article>
     </div>
   </div>
