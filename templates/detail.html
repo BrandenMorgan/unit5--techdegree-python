@@ -9,11 +9,17 @@
         <article>
             <h1>{{ entry.title }}</h1>
             <time datetime="{{ entry.date_created.strftime('%B %d, %Y') }}">
-              Created: {{ entry.date_created.strftime('%B %d, %Y') }}
+              On: {{ entry.date_created.strftime('%B %d, %Y') }}
             </time>
+            {% for author in authors %}
+               {% if entry.user_id == author.id and current_user.id == author.id %}
+                    <h4>By: Me</h4>
+               {% elif entry.user_id == author.id %}
+                    <h4>By: {{ author.username }}</h4>
+               {% endif %}
+            {% endfor %}
             <div class="entry">
                 <h3>Time Spent: </h3>
-                <!-- denomination of time? -->
                 <p>{{ entry.time_spent }}</p>
             </div>
             <div class="entry">
@@ -27,12 +33,12 @@
                 </ul>
             </div>
             <div class="entry">
-                <h3>View posts by tag:</h3>
+                <h3>View entries by tag:</h3>
                 {% for tag in tags %}
                   {% if tag.id == entry.id %}
                     {% for item in tag.tags.split() %}
                       <ul>
-                          <li><a href="{{ url_for('tags', tag=tag.tags) }}">{{ item }}</a></li>
+                          <li><a href="{{ url_for('tags', tag=item) }}">{{ item }}</a></li>
                       </ul>
                     {% endfor %}
                   {% endif %}

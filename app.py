@@ -1,10 +1,11 @@
 import datetime
 
 from flask import (Flask, render_template, g, flash, redirect,
-                    url_for, abort)
+                    url_for, abort, request)
 from flask_bcrypt import check_password_hash
 from flask_login import (LoginManager, login_user, logout_user,
                         login_required, current_user)
+from flask_paginate import Pagination, get_page_parameter
 
 import forms
 import models
@@ -83,23 +84,23 @@ def logout():
     flash("You've been logged out!", "success")
     return redirect(url_for('index'))
 
+def get_entries(offset=0, per_page=3):
+    return entries[offset: offset + per_page]
 
 @app.route('/')
 @app.route('/entries')
 def index():
     """Home page to view all entries logged in or out"""
-    # Display the author of each entry.
     # Add functionality to go to next page if there are more than x entries?
-    # entries = (models.Entry
-    #        .select()
-    #        .join(models.Tag)
-    #        )
-    # for entry in entry_user_id:
-    #     if g.user.id == entry.user_id:
+    authors = models.User.select()
     entries = models.Entry.select().order_by(models.Entry.date_created.desc())
     tags = models.Tag.select()
-
-    return render_template('index.html', entries=entries, tags=tags)
+    page = request.args.get(get_page_parameter(), type=int, default=1)
+    pagination = Pagination(page=page, per_page=3, total=entries.count())
+    return render_template('index.html',
+                            entries=entries, tags=tags, authors=authors,
+                            pagination=pagination
+                            )
 
 
 @app.route('/entries/new', methods=('GET', 'POST'))
@@ -109,13 +110,13 @@ def new_entry():
     to_entry = models.Entry.get(models.Entry.id)
     form = forms.EntryForm()
     if form.validate_on_submit():
-        models.Entry.create(title=form.title.data.strip(),
+        models.Entry.create(title=form.title.data.title().strip(),
                             content=form.content.data.strip(),
-                            resources=form.resources.data,
+                            resources=form.resources.data.strip(),
                             time_spent=form.time_spent.data,
                             user=g.user._get_current_object()
                             ),
-        models.Tag.create(tags=form.tags.data.strip(),
+        models.Tag.create(tags=form.tags.data.title().strip(),
                           to_entry=to_entry)
         flash("New entry posted!", "success")
         return redirect(url_for('index'))
@@ -128,14 +129,13 @@ def detail(id):
     """View an entry by id"""
     entries = models.Entry.select().where(models.Entry.id == id)
     tags = models.Tag.select()
-    # Display the author.
-    # users = models.User.select().where(models.Entry.user_id == models.User.id)
+    authors = models.User.select()
     if entries.count == 0:
         abort(404)
-    return render_template('detail.html', entries=entries, tags=tags)
+    return render_template('detail.html', entries=entries, tags=tags, authors=authors)
 
 
-@app.route('/entries/<tag>')
+@app.route('/tags/<tag>')
 @login_required
 def tags(tag):
     """View list of entries with the same tag"""
@@ -155,15 +155,15 @@ def edit(id):
     entry_user_id = models.Entry.select().where(models.Entry.id == id)
     if form.validate_on_submit():
         data = (models.Entry
-                .update({models.Entry.title: form.title.data,
+                .update({models.Entry.title: form.title.data.title().strip(),
                         models.Entry.date_created: datetime.datetime.now(),
-                        models.Entry.content: form.content.data,
-                        models.Entry.resources: form.resources.data,
+                        models.Entry.content: form.content.data.strip(),
+                        models.Entry.resources: form.resources.data.strip(),
                         models.Entry.time_spent: form.time_spent.data})
                 .where(models.Entry.id == id))
         data.execute()
         tag_data = (models.Tag
-                    .update({models.Tag.tags: form.tags.data})
+                    .update({models.Tag.tags: form.tags.data.title().strip()})
                     .where(models.Tag.id == id))
         tag_data.execute()
         flash("Your changes have been saved!", "success")

@@ -9,6 +9,7 @@
         <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
         <link rel="stylesheet" href="{{ url_for('static', filename='css/normalize.css') }}">
         <link rel="stylesheet" href="{{ url_for('static', filename='css/site.css') }}">
+
     </head>
     <body>
         <header>
@@ -33,17 +34,25 @@
                 </div>
             {% else %}
             {% endif %}
-            <!-- style messages? -->
-            {% with messages = get_flashed_messages(with_categories=True) %}
-              {% if messages %}
-                  {% for category, message in messages %}
-                      <div class="notification {{ category }}">{{ message }}</div>
-                  {% endfor %}
-              {% endif %}
-          {% endwith %}
-
+                <div class="entry-list">
+                  <article>
+                    {% with messages = get_flashed_messages(with_categories=True) %}
+                      {% if messages %}
+                          {% for category, message in messages %}
+                              <div class="notification {{ category }}">{{ message }}</div>
+                          {% endfor %}
+                      {% endif %}
+                  {% endwith %}
+                </article>
+              </div>
         </header>
         {% block content %}{% endblock %}
+      <div class="entry-list">
+          <article>
+            <p>{{ pagination.info }}</p>
+            <p>{{ pagination.links }}</p>
+          </article>
+        </div>
         <footer>
             <div>
                 &copy; MyJournal

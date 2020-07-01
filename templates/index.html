@@ -6,6 +6,7 @@
   <div class="conatiner">
     <div class="entry-list">
       <article>
+
           <h2>
               <a href="{{ url_for('detail', id=entry.id) }}">{{ entry.title }}</a>
           </h2>
@@ -19,6 +20,14 @@
               {% endfor %}
             {% endif %}
           {% endfor %}
+          {% for author in authors %}
+            {% if entry.user_id == author.id and current_user.id == author.id %}
+              <h4>By: Me</h4>
+               {% elif entry.user_id == author.id %}
+                    <h4>By: {{ author.username }}</h4>
+             {% endif %}
+          {% endfor %}
+
       </article>
     </div>
   </div>
