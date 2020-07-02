@@ -5,14 +5,14 @@ from flask import (Flask, render_template, g, flash, redirect,
 from flask_bcrypt import check_password_hash
 from flask_login import (LoginManager, login_user, logout_user,
                         login_required, current_user)
-from flask_paginate import Pagination, get_page_parameter
+from flask_paginate import Pagination, get_page_args
 
 import forms
 import models
 
 
 DEBUG = True
-PORT = 8000
+PORT = 8080
 HOST = '0.0.0.0'
 
 app = Flask(__name__)
@@ -32,9 +32,9 @@ def load_user(userid):
 
 @app.before_request
 def before_request():
-    """Connect to the database befire each request."""
+    """Connect to the database before each request."""
     g.db = models.DATABASE
-    g.db.connect()
+    g.db.connect(reuse_if_open=True)
     g.user = current_user
 
 
@@ -84,23 +84,25 @@ def logout():
     flash("You've been logged out!", "success")
     return redirect(url_for('index'))
 
-def get_entries(offset=0, per_page=3):
-    return entries[offset: offset + per_page]
 
 @app.route('/')
 @app.route('/entries')
 def index():
     """Home page to view all entries logged in or out"""
-    # Add functionality to go to next page if there are more than x entries?
     authors = models.User.select()
     entries = models.Entry.select().order_by(models.Entry.date_created.desc())
     tags = models.Tag.select()
-    page = request.args.get(get_page_parameter(), type=int, default=1)
-    pagination = Pagination(page=page, per_page=3, total=entries.count())
-    return render_template('index.html',
-                            entries=entries, tags=tags, authors=authors,
-                            pagination=pagination
-                            )
+    page = int(request.args.get('page', 1))
+    per_page = 3
+    offset = (page - 1) * per_page
+    entries_for_render = entries.limit(per_page).offset(offset)
+
+    pagination = Pagination(page=page, per_page=per_page,
+                            offset=offset, total=entries.count(),
+                            css_framework='bootstrap4')
+    return render_template('index.html', entries=entries_for_render,
+                            tags=tags, authors=authors,
+                            pagination=pagination)
 
 
 @app.route('/entries/new', methods=('GET', 'POST'))
@@ -132,7 +134,8 @@ def detail(id):
     authors = models.User.select()
     if entries.count == 0:
         abort(404)
-    return render_template('detail.html', entries=entries, tags=tags, authors=authors)
+    return render_template('detail.html', entries=entries,
+                            tags=tags, authors=authors)
 
 
 @app.route('/tags/<tag>')
@@ -173,7 +176,8 @@ def edit(id):
             if g.user.id == entry.user_id:
                 data = (models.Entry
                         .select()
-                        .join(models.Tag, on=(models.Entry.id == models.Tag.id))
+                        .join(models.Tag,
+                              on=(models.Entry.id == models.Tag.id))
                         .where(models.Entry.id == id)
                         .get())
                 tag = (models.Tag

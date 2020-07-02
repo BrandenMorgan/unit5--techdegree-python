@@ -1,17 +1,19 @@
 {% extends "layout.html" %}
 
 {% block content %}
+  {% if entries.count() == 0 %}
+    <h2>No entries yet</h2>
+  {% endif %}
 {% for entry in entries %}
 <section>
   <div class="conatiner">
     <div class="entry-list">
       <article>
-
           <h2>
               <a href="{{ url_for('detail', id=entry.id) }}">{{ entry.title }}</a>
           </h2>
           <time datetime="{{ entry.date_created.strftime('%B %d, %Y') }}">
-            On: {{ entry.date_created.strftime('%B %d, %Y') }}
+              On: {{ entry.date_created.strftime('%B %d, %Y') }}
           </time>
           {% for tag in tags %}
             {% if tag.id == entry.id %}
@@ -23,14 +25,23 @@
           {% for author in authors %}
             {% if entry.user_id == author.id and current_user.id == author.id %}
               <h4>By: Me</h4>
-               {% elif entry.user_id == author.id %}
-                    <h4>By: {{ author.username }}</h4>
-             {% endif %}
+            {% elif entry.user_id == author.id %}
+              <h4>By: {{ author.username }}</h4>
+            {% endif %}
           {% endfor %}
-
       </article>
     </div>
   </div>
 </section>
 {% endfor %}
+<section>
+    <div class="container">
+        <div class="entry-list">
+            <article>
+              <p>{{ pagination.info }}</p>
+              <p>{{ pagination.links }}</p>
+            </article>
+        </div>
+    </div>
+</section>
 {% endblock %}

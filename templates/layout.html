@@ -7,9 +7,9 @@
         <link href="https://fonts.googleapis.com/css?family=Cousine:400" rel="stylesheet" type="text/css">
         <link href="https://fonts.googleapis.com/css?family=Work+Sans:600" rel="stylesheet" type="text/css">
         <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/css/bootstrap.min.css">
         <link rel="stylesheet" href="{{ url_for('static', filename='css/normalize.css') }}">
         <link rel="stylesheet" href="{{ url_for('static', filename='css/site.css') }}">
-
     </head>
     <body>
         <header>
@@ -47,12 +47,6 @@
               </div>
         </header>
         {% block content %}{% endblock %}
-      <div class="entry-list">
-          <article>
-            <p>{{ pagination.info }}</p>
-            <p>{{ pagination.links }}</p>
-          </article>
-        </div>
         <footer>
             <div>
                 &copy; MyJournal
