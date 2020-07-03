@@ -34,17 +34,19 @@
                 </div>
             {% else %}
             {% endif %}
-                <div class="entry-list">
-                  <article>
+
                     {% with messages = get_flashed_messages(with_categories=True) %}
                       {% if messages %}
+                      <div class="entry-list">
+                        <article>
                           {% for category, message in messages %}
                               <div class="notification {{ category }}">{{ message }}</div>
                           {% endfor %}
+                        </article>
+                      </div>
                       {% endif %}
                   {% endwith %}
-                </article>
-              </div>
+
         </header>
         {% block content %}{% endblock %}
         <footer>
